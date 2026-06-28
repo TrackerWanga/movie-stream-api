@@ -23,7 +23,15 @@ let jwtToken = null;
 let tokenExpiry = 0;
 
 async function getToken() {
-  if (jwtToken && Date.now() < tokenExpiry) return jwtToken;
+  // Use a long-lived token (valid 90 days) instead of scraping every time
+  // This bypasses CloudFront blocking Render's IP
+  const HARDCODED_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjY3NTU3ODExOTM4NTkyOTYwOCwiYXRwIjozLCJleHQiOiIxNzgyNjY3MjA1IiwiZXhwIjoxNzkwNDQzMjA1LCJpYXQiOjE3ODI2NjY5MDV9.2n0yqU3dhrbgyLAc6EonU6q3gd28HJsKDetkM69N0uc';
+  if (HARDCODED_TOKEN) {
+    jwtToken = HARDCODED_TOKEN;
+    tokenExpiry = Date.now() + (90 * 24 * 60 * 60 * 1000);
+    return jwtToken;
+  }
+  // Fallback: try to scrape (may fail on Render)
   await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
   const res = await api.get(NETFILM, {
     headers: { 'User-Agent': UA, 'Accept': 'text/html', 'Cookie': `uuid=${STATIC_UUID}` }
